@@ -4,26 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ポケモンスリープ 寝顔図鑑トラッカー</title>
+    <!-- <link rel="icon" href="favicon.ico">  例: ファビコンを設定する場合 -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>ポケモンスリープ 寝顔図鑑トラッカー</h1>
+    <header>
+        <h1>ポケモンスリープ 寝顔図鑑トラッカー</h1>
+    </header>
 
-    <div id="progress-summary">
-        <p>現在の進捗率: <span id="overall-progress">0%</span></p>
-        <div class="progress-bar-container">
-            <div class="progress-bar" id="progress-fill"></div>
+    <main>
+        <section id="progress-summary" aria-labelledby="progress-summary-heading">
+            <h2 id="progress-summary-heading" class="visually-hidden">進捗サマリー</h2>
+            <p>現在の進捗率: <span id="overall-progress" aria-live="polite">0%</span></p>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-fill" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </section>
+
+        <section id="pokemon-list-section" aria-labelledby="pokemon-list-heading">
+            <h2 id="pokemon-list-heading" class="visually-hidden">ポケモンリスト</h2>
+            <div id="pokemon-list">
+                <!-- ポケモンリストはここにJavaScriptで生成されます -->
+            </div>
+        </section>
+
+        <div class="controls">
+            <button id="save-button">進捗を保存</button>
+            <button id="reset-button">リセット</button>
         </div>
-    </div>
+    </main>
 
-    <div id="pokemon-list">
-        </div>
+    <footer>
+        <p><small>&copy; <span id="current-year"></span> あなたの名前またはプロジェクト名</small></p>
+    </footer>
 
-    <div class="controls">
-        <button id="save-button">進捗を保存</button>
-        <button id="reset-button">リセット</button>
-    </div>
-
-    <script src="script.js"></script>
+    <script src="script.js" defer></script>
 </body>
 </html>

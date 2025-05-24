@@ -26,19 +26,27 @@ const resetButton = document.getElementById('reset-button');
 function loadProgress() {
     const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (savedData) {
-        const loadedData = JSON.parse(savedData);
-        // ロードしたデータを現在のデータ構造にマージする
-        // 新しいポケモンや寝顔が追加された場合に既存のデータを壊さないようにするため
-        for (const pokemonName in pokemonSleepData) {
-            if (loadedData[pokemonName]) {
-                pokemonSleepData[pokemonName].forEach((face, index) => {
-                    if (loadedData[pokemonName][index]) {
-                        face.discovered = loadedData[pokemonName][index].discovered;
-                    }
-                });
+        try {
+            const loadedData = JSON.parse(savedData);
+            // ロードしたデータを現在のデータ構造にマージする
+            // 新しいポケモンや寝顔が追加された場合に既存のデータを壊さないようにするため
+            for (const pokemonName in pokemonSleepData) {
+                if (loadedData[pokemonName] && Array.isArray(loadedData[pokemonName])) {
+                    pokemonSleepData[pokemonName].forEach((face, index) => {
+                        // 保存されたデータに該当ポケモンの該当インデックスの寝顔情報があり、
+                        // かつ discovered プロパティが存在する場合にのみマージ
+                        if (loadedData[pokemonName][index] && typeof loadedData[pokemonName][index].discovered === 'boolean') {
+                            face.discovered = loadedData[pokemonName][index].discovered;
+                        }
+                    });
+                }
             }
+            console.log('進捗をロードしました。');
+        } catch (error) {
+            console.error('ローカルストレージからのデータ読み込みに失敗しました:', error);
+            // オプション: 破損したデータを削除する
+            // localStorage.removeItem(LOCAL_STORAGE_KEY);
         }
-        console.log('進捗をロードしました。');
     } else {
         console.log('保存されたデータがありません。');
     }
@@ -79,9 +87,14 @@ function renderPokemonList() {
         pokemonCard.appendChild(h2);
 
         pokemonSleepData[pokemonName].forEach((face, index) => {
+            const checkboxId = `face-${pokemonName.replace(/\s+/g, '-')}-${index}`; // ユニークなIDを生成
+
             const label = document.createElement('label');
+            label.htmlFor = checkboxId; // ラベルとチェックボックスを関連付け
+
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
+            checkbox.id = checkboxId;
             checkbox.classList.add('sleep-face-checkbox');
             checkbox.checked = face.discovered;
             checkbox.dataset.pokemon = pokemonName;
@@ -98,7 +111,7 @@ function renderPokemonList() {
             label.appendChild(checkbox);
             label.appendChild(document.createTextNode(face.name));
             pokemonCard.appendChild(label);
-            pokemonCard.appendChild(document.createElement('br')); // 各寝顔を改行
+            // <br> の代わりにCSSでマージンを設定することを推奨
         });
         pokemonListDiv.appendChild(pokemonCard);
     }
@@ -121,6 +134,10 @@ function updateOverallProgress() {
     const progressPercentage = totalFaces === 0 ? 0 : Math.round((discoveredFaces / totalFaces) * 100);
     overallProgressSpan.textContent = `${progressPercentage}%`;
     progressBarFill.style.width = `${progressPercentage}%`;
+    // ARIA属性を更新 (HTML側で role="progressbar" と aria-valuemin/max が設定されている場合)
+    if (progressBarFill.getAttribute('role') === 'progressbar') {
+        progressBarFill.setAttribute('aria-valuenow', progressPercentage);
+    }
 }
 
 // --- イベントリスナー ---
@@ -135,4 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loadProgress();
     renderPokemonList();
     updateOverallProgress(); // 初回ロード時にも進捗率を更新
+    // 例: フッターに現在の年を表示する場合 (HTMLに <span id="current-year"></span> があると仮定)
+    // const currentYearSpan = document.getElementById('current-year');
+    // if (currentYearSpan) {
+    //     currentYearSpan.textContent = new Date().getFullYear();
+    // }
 });
