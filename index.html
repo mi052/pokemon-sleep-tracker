@@ -4,40 +4,108 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ポケモンスリープ 寝顔図鑑トラッカー</title>
-    <!-- <link rel="icon" href="favicon.ico">  例: ファビコンを設定する場合 -->
     <link rel="stylesheet" href="style.css">
+    <!-- <link rel="icon" href="favicon.ico"> -->
 </head>
 <body>
     <header>
-        <h1>ポケモンスリープ 寝顔図鑑トラッカー</h1>
+        <!-- <h1>ポケモンスリープ 寝顔図鑑トラッカー</h1> -->
     </header>
 
     <main>
-        <section id="progress-summary" aria-labelledby="progress-summary-heading">
-            <h2 id="progress-summary-heading" class="visually-hidden">進捗サマリー</h2>
-            <p>現在の進捗率: <span id="overall-progress" aria-live="polite">0%</span></p>
-            <div class="progress-bar-container">
-                <div class="progress-bar" id="progress-fill" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        <section id="progress-summary" class="progress-section" aria-labelledby="progress-summary-heading">
+            <div class="main-heading-controls-container">
+                <h2 id="progress-summary-heading">Pokemon Sleep 寝顔図鑑トラッカー</h2>
+                <div class="settings-menu-container">
+                    <button id="settings-button">⚙️</button>
+                    <div id="settings-dropdown" class="settings-dropdown-content hidden">
+                        <button class="settings-dropdown-item" id="check-all-button-menu">すべてのチェック ON</button>
+                        <button class="settings-dropdown-item" id="uncheck-all-button-menu">すべてのチェック OFF</button>
+                    </div>
+                </div>
             </div>
+            <div class="progress-grid">
+                <p id="overall-progress-grid-item"><span id="overall-progress" aria-live="polite">全体 0.0% ( 0 / 0 )</span></p>
+                <div id="all-fields-progress">
+                    <!-- JavaScript inserts .field-progress-item divs here -->
+                </div>
+            </div>
+            <p class="progress-description">フィールド名 リサーチ率 （限定寝顔 未リサーチ数）</p>
         </section>
 
-        <section id="pokemon-list-section" aria-labelledby="pokemon-list-heading">
-            <h2 id="pokemon-list-heading" class="visually-hidden">ポケモンリスト</h2>
-            <div id="pokemon-list">
-                <!-- ポケモンリストはここにJavaScriptで生成されます -->
+        <div class="pokemon-tables-container">
+            <div class="pokemon-table-section utouto-section">
+                <h2>うとうとタイプ</h2>
+                <table id="utouto-pokemon-table">
+                    <thead>
+                        <tr>
+                            <th>図鑑No.</th>
+                            <th>ポケモン</th>
+                            <th>寝顔1</th>
+                            <th>寝顔2</th>
+                            <th>寝顔3</th>
+                            <th>寝顔4</th>
+                        </tr>
+                    </thead>
+                    <tbody id="utouto-table-body">
+                        <!-- ポケモンリストがここに挿入されます -->
+                    </tbody>
+                </table>
             </div>
-        </section>
 
-        <div class="controls">
-            <button id="save-button">進捗を保存</button>
-            <button id="reset-button">リセット</button>
+            <div class="pokemon-table-section suyasuya-section">
+                <h2>すやすやタイプ</h2>
+                <table id="suyasuya-pokemon-table">
+                    <thead>
+                        <tr>
+                            <th>図鑑No.</th>
+                            <th>ポケモン</th>
+                            <th>寝顔1</th>
+                            <th>寝顔2</th>
+                            <th>寝顔3</th>
+                            <th>寝顔4</th>
+                        </tr>
+                    </thead>
+                    <tbody id="suyasuya-table-body">
+                        <!-- ポケモンリストがここに挿入されます -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pokemon-table-section gussuri-section">
+                <h2>ぐっすりタイプ</h2>
+                <table id="gussuri-pokemon-table">
+                    <thead>
+                        <tr>
+                            <th>図鑑No.</th>
+                            <th>ポケモン</th>
+                            <th>寝顔1</th>
+                            <th>寝顔2</th>
+                            <th>寝顔3</th>
+                            <th>寝顔4</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gussuri-table-body">
+                        <!-- ポケモンリストがここに挿入されます -->
+                    </tbody>
+                </table>
+            </div>
         </div>
+
+        <!-- メタモン専用セクション -->
+        <section class="ditto-table-section">
+            <!-- <h2>メタモン</h2> を削除 -->
+            <div id="ditto-sleep-faces-container" class="ditto-sleep-faces-container">
+                <!-- メタモンの情報と寝顔チェックボックスがここに挿入されます -->
+            </div>
+        </section>
+
     </main>
 
     <footer>
-        <p><small>&copy; <span id="current-year"></span> あなたの名前またはプロジェクト名</small></p>
+        <p>&copy; <span id="current-year">2024</span> Pokemon Sleep Tracker. All rights reserved.</p>
     </footer>
 
-    <script src="script.js" defer></script>
+    <script src="script.js"></script>
 </body>
 </html>

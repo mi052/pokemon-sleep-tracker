@@ -1,70 +1,387 @@
+/* c:\Users\furui\OneDrive\ドキュメント\pokemon-sleep-tracker\pokemon-sleep-tracker\style.css */
+
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f0f4f8;
-    color: #333;
+    font-family: sans-serif;
     margin: 20px;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+header {
+    /* background-color: #333; */ /* ヘッダー背景はなしに */
+    /* color: white; */
+    padding: 0; /* headerのパディングを0に */
     text-align: center;
+    margin-bottom: 0; /* headerのマージンボトムも0に (必要なら後で調整) */
+    /* border-radius: 8px; */
 }
 
-h1 {
-    color: #2c3e50;
-    margin-bottom: 30px;
+header h1 {
+    margin: 0;
+    font-size: 2em;
+    color: white; /* h1の文字色を明示的に白に (ヘッダー背景がない場合は不要かも) */
 }
 
-#progress-summary {
-    background-color: #e6f2ff;
+
+h1, h2, h3 {
+    color: #333;
+}
+
+/* メイン見出しとコントロールボタンのコンテナ */
+.main-heading-controls-container {
+    display: flex;
+    justify-content: space-between; /* 見出しを左、歯車を右に配置 */
+    align-items: center; /* 垂直方向中央揃え */
+    margin-bottom: 8px; /* 下の説明文との間隔 */
+}
+
+/* 進捗サマリーセクションの見出しの余白調整 */
+#progress-summary-heading {
+    margin-top: 0;
+    margin-bottom: 0; /* .main-heading-controls-container で間隔を管理 */
+}
+
+#progress-summary p#overall-progress-grid-item { /* 全体の進捗率を表示するpタグ (グリッドアイテムとして特定) */
+    margin-top: 0; /* pタグの上のマージンをなくす */
+    margin-bottom: 0; /* グリッドのgapで調整するので基本0に */
+}
+/* 進捗セクションの説明文のスタイル */
+.progress-description {
+    font-size: 0.85em;
+    color: #777777; /* グレーの文字色 */
+    margin-top: 10px; /* 上のグリッドとの間隔 */
+    margin-bottom: 0px; /* 下の要素との間隔 (セクションのパディングがあるので0でも良いかも) */
+    text-align: right; /* 右寄せ */
+}
+
+.progress-section {
+    margin-bottom: 20px;
     padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 30px;
-    display: inline-block; /* 中央寄せ用 */
-}
-
-.progress-bar-container {
-    width: 300px;
-    height: 20px;
-    background-color: #ddd;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-top: 10px;
-}
-
-.progress-bar {
-    height: 100%;
-    width: 0%; /* JavaScriptで制御 */
-    background-color: #4CAF50; /* 緑色 */
-    border-radius: 10px;
-    transition: width 0.5s ease-in-out;
-}
-
-.pokemon-card {
     background-color: #fff;
-    border: 1px solid #ddd;
     border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 10px;
-    text-align: left;
-    display: inline-block; /* カードを横並びにするため */
-    width: 280px; /* カードの幅 */
-    vertical-align: top; /* 上端を揃える */
-    margin: 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.sleep-face-checkbox {
-    margin-right: 5px;
-}
-
-.controls button {
-    background-color: #007bff;
-    color: white;
-    padding: 10px 20px;
+button {
+    padding: 10px 15px;
+    margin-right: 10px;
     border: none;
-    border-radius: 5px;
+    border-radius: 4px; /* 少し角を調整 */
+    background-color: #e0e0e0; /* 薄い灰色 */
+    color: #333; /* 文字色を濃い灰色に */
     cursor: pointer;
-    font-size: 16px;
-    margin: 10px;
+    font-size: 1em;
 }
 
-.controls button:hover {
-    background-color: #0056b3;
+button:hover {
+    background-color: #d0d0d0; /* ホバー時も少し暗い灰色 */
+}
+
+button.danger {
+    background-color: #dc3545;
+}
+
+button.danger:hover {
+    background-color: #c82333;
+}
+
+#overall-progress, .field-progress-item {
+    font-size: 1.1em;
+    /* margin-top: 5px; */ /* Removed - will rely on grid gap and padding */
+}
+
+/* --- 設定メニュースタイル --- */
+.settings-menu-container {
+    position: relative; /* ドロップダウンの位置決めの基準 */
+    /* display: inline-block; */ /* Flexアイテムになるので不要 */
+}
+
+#settings-button {
+    background-color: transparent; /* 背景を透過に */
+    color: #333;
+    padding: 8px 12px; /* 少し小さめに */
+}
+
+#settings-button:hover {
+    background-color: #f0f0f0; /* ホバー時は少し明るい灰色に */
+}
+
+.settings-dropdown-content {
+    /* display: none; */ /* JavaScriptで .hidden クラスを操作して表示/非表示を制御するため、この行は不要 */
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 200px; /* 少し幅を広げる */
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1; /* 他の要素より手前に表示 */
+    border-radius: 4px;
+    right: 0; /* ボタンの右端に合わせる */
+}
+
+/* ドロップダウン内の各アイテムの共通スタイル */
+.settings-dropdown-item {
+    color: #333;
+    padding: 10px 15px; /* パディング調整 */
+    text-decoration: none;
+    display: block;
+    width: 100%;
+    text-align: left;
+    box-sizing: border-box; /* パディングとボーダーを幅に含める */
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+.settings-dropdown-item:hover {
+    background-color: #f1f1f1;
+}
+/* ラベル内のチェックボックスとテキストの配置調整 */
+.settings-dropdown-item input[type="checkbox"] {
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+
+.hidden { /* JavaScriptで表示・非表示を切り替えるためのクラス */
+    display: none !important;
+}
+
+.pokemon-tables-container {
+    display: flex; /* 子要素を横並びにする */
+    flex-wrap: wrap; /* 横幅が足りない場合は折り返す (今回はPC想定なのであまり影響しないかも) */
+    gap: 20px; /* テーブル間の隙間 */
+    margin-bottom: 20px;
+}
+
+.pokemon-table-section {
+    flex: 1; /* 各テーブルセクションが利用可能なスペースを均等に分け合う */
+    min-width: 300px; /* 各テーブルの最小幅を指定 (これより狭くなると縦並びになるか、flex-wrapが効く) */
+    background-color: #fff; /* テーブルセクション全体の背景は白 */
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden; /* h2の角丸がはみ出ないように */
+}
+
+.pokemon-table-section h2 {
+    margin-top: 0;
+    margin-bottom: 0;
+    border-bottom: 2px solid #eee;
+    padding: 10px 15px 5px 15px; /* 上・左右は10px、下は5pxにパディングを調整 */
+    border-top-left-radius: 8px; /* 左上の角を丸める */
+    border-top-right-radius: 8px; /* 右上の角を丸める */
+}
+
+/* --- 睡眠タイプごとのテーマカラー --- */
+.utouto-section h2 {
+    background-color: #FFEC71; /* うとうと: 背景色 */
+    color: #785513; /* うとうと: 文字色 */
+    border-bottom-color: #E6D053; /* 背景色より少し暗い黄色系 */
+}
+.utouto-section th {
+    background-color: #FFEC71;
+    color: #785513;
+}
+
+.suyasuya-section h2 {
+    background-color: #85FBFF; /* すやすや: 背景色 */
+    color: #17677A; /* すやすや: 文字色 */
+    border-bottom-color: #68DDE0; /* 背景色より少し暗いシアン系 */
+}
+.suyasuya-section th {
+    background-color: #85FBFF;
+    color: #17677A;
+}
+/* メタモン情報内のすやすやテキスト用 */
+.suyasuya-theme-text {
+    background-color: #85FBFF;
+    color: #17677A;
+    padding: 2px 5px; /* 見た目調整用 */
+    border-radius: 3px; /* 見た目調整用 */
+    font-weight: bold;
+}
+
+
+.gussuri-section h2 {
+    background-color: #5594FB; /* ぐっすり: 新しい背景色 */
+    color: #ffffff; /* ぐっすり: 文字色 */
+    border-bottom-color: #3A7BD5; /* 新しい背景色より少し暗い青系 */
+}
+.gussuri-section th {
+    background-color: #5594FB;
+    color: #ffffff;
+}
+
+/* --- 限定寝顔セル (TD) のスタイル --- */
+/* 基本の限定セルスタイルは各タイプで上下左右の枠線を定義 */
+.limited-sleep-face-cell.utouto-limited-cell {
+    border-top: 3px solid #FFEC71;
+    border-bottom: 3px solid #FFEC71;
+    border-left: 3px solid #FFEC71;
+    border-right: 3px solid #FFEC71;
+}
+.limited-sleep-face-cell.suyasuya-limited-cell {
+    border-top: 3px solid #85FBFF;
+    border-bottom: 3px solid #85FBFF;
+    border-left: 3px solid #85FBFF;
+    border-right: 3px solid #85FBFF;
+}
+.limited-sleep-face-cell.gussuri-limited-cell {
+    border-top: 2px solid #5594FB;
+    border-bottom: 2px solid #5594FB;
+    border-left: 2px solid #5594FB;
+    border-right: 2px solid #5594FB;
+}
+
+/* 隣接する限定セルとの境界線を通常に戻すためのクラス */
+.limited-sleep-face-cell.limited-cell-no-left-border {
+    border-left: 1px solid #ddd; /* 通常のセルの枠線に戻す */
+}
+.limited-sleep-face-cell.limited-cell-no-right-border {
+    border-right: 1px solid #ddd; /* 通常のセルの枠線に戻す */
+}
+.limited-sleep-face-cell.limited-cell-no-top-border {
+    border-top: 1px solid #ddd; /* 通常のセルの枠線に戻す */
+}
+.limited-sleep-face-cell.limited-cell-no-bottom-border {
+    border-bottom: 1px solid #ddd; /* 通常のセルの枠線に戻す */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse; /* セルの境界線を重ねる */
+    margin-top: 0; /* テーブルの上のマージンをなくす */
+}
+
+th, td {
+    border: 1px solid #ddd; /* セルに境界線を追加 */
+    padding: 8px;
+    text-align: left; /* デフォルトは左寄せ */
+    vertical-align: middle; /* セル内のコンテンツを垂直方向中央に */
+}
+
+th {
+    /* background-color: #f0f0f0; */ /* 個別のテーマカラーを適用するためコメントアウト */
+    font-weight: bold;
+    /* color: #333; */ /* 個別のテーマカラーで指定 */
+}
+
+td {
+    font-size: 0.9em;
+}
+
+/* 寝顔セルの内容配置用クラス */
+td.cell-content-left-aligned {
+    text-align: left;
+}
+td.cell-content-center-aligned {
+    text-align: center;
+}
+
+
+/* チェックボックスの見た目を少し調整 */
+.sleep-face-checkbox {
+    margin-right: 5px; /* 頭文字を表示しない場合はこれが効く */
+    vertical-align: middle;
+    accent-color: #888888; /* チェックボックスのアクセントカラーを灰色に */
+}
+
+/* テーブル内のラベルの余白を調整 */
+td label {
+    display: inline-flex; /* 親のtext-alignで中央寄せ可能に & ラベル内要素を横並び */
+    align-items: center;
+    margin: 0; /* ラベル自体の余白は不要に */
+}
+
+footer {
+    margin-top: 30px;
+    text-align: center;
+    font-size: 0.9em;
+    color: #777;
+}
+
+/* --- Progress Grid Layout --- */
+.progress-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 equal-width columns */
+    gap: 4px 16px; /* 4px row gap, 16px column gap */
+    margin-top: 10px; /* Space below the h2 heading */
+}
+
+#all-fields-progress {
+    display: contents; /* Children (.field-progress-item) will participate in the parent's grid layout */
+}
+
+/* Styling for items within the progress grid */
+#overall-progress-grid-item, /* This is the <p> tag for overall progress */
+.field-progress-item {      /* These are the <div> tags for field progress */
+    margin: 0; /* Remove default margins, rely on grid gap */
+    padding: 2px 0; /* Minimal vertical padding */
+    /* font-size: 1.1em; is already applied by a more general rule */
+}
+
+/* --- メタモン専用セクションのスタイル --- */
+.ditto-table-section {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-top: 20px;
+    margin-bottom: 20px;
+    text-align: center; /* セクション全体を中央寄せの基準に */
+}
+
+.ditto-sleep-faces-container {
+    display: flex;
+    flex-direction: column; /* 情報表示とチェックボックス群を縦に並べる */
+    align-items: center; /* アイテム群を中央寄せ */
+    gap: 10px; /* 情報表示とチェックボックス群の間隔 */
+}
+
+.ditto-info-item {
+    font-size: 1.1em;
+    margin-bottom: 10px; /* チェックボックス群との間隔 */
+    display: flex; /* 中の要素を横並びにする */
+    align-items: center; /* 垂直方向中央揃え */
+    gap: 8px; /* 情報内の各要素の間隔 */
+}
+.ditto-pokedex-no,
+.ditto-name {
+    /* margin-right: 6px; は gap で対応 */
+}
+.ditto-sleep-type {
+    /* .suyasuya-theme-text でスタイル指定 */
+}
+
+.ditto-face-item-wrapper { /* チェックボックス群をラップする新しいコンテナ */
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 12px;
+}
+
+.ditto-face-item {
+    /* display: inline-flex; は label に設定 */
+}
+.ditto-face-item label {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px;
+}
+.ditto-face-number {
+    margin-left: 3px;
+    font-size: 0.9em;
+}
+
+/* 寝顔セルの内容配置用クラス */
+/* .cell-content-left-aligned は使用されなくなったため削除可能 */
+/* th.cell-content-left-aligned, td.cell-content-left-aligned { text-align: left; } */
+
+th.cell-content-center-aligned, /* th にも適用できるように追加 */
+td.cell-content-center-aligned {
+    text-align: center;
+}
+
+/* また、th のデフォルトの text-align が left であることを確認してください。
+   通常はブラウザのデフォルトか、以下のように明示的に指定されています。 */
+th {
+    /* ...他のスタイル... */
+    text-align: left; /* デフォルトは左寄せ */
 }
