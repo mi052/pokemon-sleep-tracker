@@ -2,9 +2,22 @@
 
 body {
     font-family: sans-serif;
-    margin: 20px;
+    margin: 0; /* 2カラムレイアウトのためbodyのマージンは0に */
     background-color: #f4f4f4;
     color: #333;
+}
+
+/* --- 2カラムレイアウト --- */
+.two-column-layout {
+    display: flex;
+}
+.left-column {
+    width: 280px; /* 左カラムの幅を固定 (調整可能) */
+    padding: 20px;
+    height: 100vh; /* ビューポートの高さに合わせる */
+    position: sticky; /* 左カラム自体をstickyに */
+    top: 0; /* 画面上部に固定 */
+    /* background-color: #e9e9e9; */ /* デバッグ用に背景色をつけても良い */
 }
 
 header {
@@ -29,16 +42,16 @@ h1, h2, h3 {
 
 /* メイン見出しとコントロールボタンのコンテナ */
 .main-heading-controls-container {
-    display: flex;
-    justify-content: space-between; /* 見出しを左、歯車を右に配置 */
-    align-items: center; /* 垂直方向中央揃え */
+    display: flex; /* Flexboxを引き続き使用 */
+    flex-direction: column; /* 子要素を縦に並べる */
+    align-items: flex-start; /* 子要素を左揃えにする */
     margin-bottom: 8px; /* 下の説明文との間隔 */
 }
 
 /* 進捗サマリーセクションの見出しの余白調整 */
 #progress-summary-heading {
     margin-top: 0;
-    margin-bottom: 0; /* .main-heading-controls-container で間隔を管理 */
+    margin-bottom: 8px; /* 歯車ボタンとの間隔 */
 }
 
 #progress-summary p#overall-progress-grid-item { /* 全体の進捗率を表示するpタグ (グリッドアイテムとして特定) */
@@ -46,20 +59,35 @@ h1, h2, h3 {
     margin-bottom: 0; /* グリッドのgapで調整するので基本0に */
 }
 /* 進捗セクションの説明文のスタイル */
-.progress-description {
+.progress-section .progress-description { /* セレクタを詳細に */
     font-size: 0.85em;
     color: #777777; /* グレーの文字色 */
-    margin-top: 10px; /* 上のグリッドとの間隔 */
+    margin-top: 10px; /* 上のリストとの間隔 */
     margin-bottom: 0px; /* 下の要素との間隔 (セクションのパディングがあるので0でも良いかも) */
-    text-align: right; /* 右寄せ */
+    text-align: left; /* 左寄せに変更 */
 }
 
 .progress-section {
+    width: 100%;
     margin-bottom: 20px;
-    padding: 15px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 0; /* left-column の padding で管理するため0に */
+    background-color: #f4f4f4; /* 左カラムの背景色と合わせるか、透明にするなど調整 */
+    /* スクロールしても左カラム内で上部に固定するためのスタイル */
+    position: sticky; /* progress-section を左カラム内でstickyに */
+    /* top: 0; */ /* 上部固定ではなくなったのでコメントアウトまたは削除 */
+    top: 20px; /* left-columnのpadding分下げる、または0にする */
+    z-index: 100; /* 右カラムよりは手前、ドロップダウンよりは奥など調整 */
+    /* width: 100%; */ /* 必要に応じて設定。親要素がbody直下なら不要な場合も */
+ }
+.right-column {
+    flex: 1; /* 右カラムが残りの幅をすべて使用 */
+    padding: 20px;
+    display: flex; /* 右カラム内の要素を縦に並べるために追加 */
+    flex-direction: column; /* 右カラム内の要素を縦方向に配置 */
+    gap: 20px; /* 右カラム内の主要セクション間の隙間 */
+    /* overflow-y: auto; */ /* bodyのスクロールに任せるため解除 */
+    /* height: 100vh; */   /* 高さを固定せず、コンテンツに応じるようにするため解除 */
+    box-sizing: border-box; /* paddingを含めて幅/高さを計算するのは維持 */
 }
 
 button {
@@ -98,12 +126,11 @@ button.danger:hover {
 
 #settings-button {
     background-color: transparent; /* 背景を透過に */
-    color: #333;
-    padding: 8px 12px; /* 少し小さめに */
-}
-
-#settings-button:hover {
-    background-color: #f0f0f0; /* ホバー時は少し明るい灰色に */
+    color: #333; /* 文字色 */
+    padding: 12px 10px; /* さらにパディングを大きく */
+    font-size: 1.5em; /* アイコンをさらに大きく */
+    margin-right: 0; /* 右マージンは不要に */
+    /* 左寄せは親要素の align-items: flex-start で対応 */
 }
 
 .settings-dropdown-content {
@@ -113,8 +140,9 @@ button.danger:hover {
     min-width: 200px; /* 少し幅を広げる */
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 1; /* 他の要素より手前に表示 */
-    border-radius: 4px;
-    right: 0; /* ボタンの右端に合わせる */
+    border-radius: 4px; /* 角丸 */
+    left: 0; /* ボタンの左端に合わせる */
+    /* right: 0; は削除 */
 }
 
 /* ドロップダウン内の各アイテムの共通スタイル */
@@ -153,12 +181,13 @@ button.danger:hover {
     display: flex; /* 子要素を横並びにする */
     flex-wrap: wrap; /* 横幅が足りない場合は折り返す (今回はPC想定なのであまり影響しないかも) */
     gap: 20px; /* テーブル間の隙間 */
-    margin-bottom: 20px;
+    /* margin-bottom: 20px; */ /* 親の .right-column の gap で管理 */
 }
 
 .pokemon-table-section {
     flex: 1; /* 各テーブルセクションが利用可能なスペースを均等に分け合う */
     min-width: 300px; /* 各テーブルの最小幅を指定 (これより狭くなると縦並びになるか、flex-wrapが効く) */
+    padding: 12px;
     background-color: #fff; /* テーブルセクション全体の背景は白 */
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -214,8 +243,7 @@ button.danger:hover {
     color: #ffffff;
 }
 
-/* --- 限定寝顔セル (TD) のスタイル --- */
-/* 基本の限定セルスタイルは各タイプで上下左右の枠線を定義 */
+/* 限定寝顔のセルのスタイル */
 .limited-sleep-face-cell.utouto-limited-cell {
     border-top: 3px solid #FFEC71;
     border-bottom: 3px solid #FFEC71;
@@ -237,16 +265,16 @@ button.danger:hover {
 
 /* 隣接する限定セルとの境界線を通常に戻すためのクラス */
 .limited-sleep-face-cell.limited-cell-no-left-border {
-    border-left: 1px solid #ddd; /* 通常のセルの枠線に戻す */
+    border-left-color: transparent !important; /* 左枠を透明に */
 }
 .limited-sleep-face-cell.limited-cell-no-right-border {
-    border-right: 1px solid #ddd; /* 通常のセルの枠線に戻す */
+    border-right-color: transparent !important; /* 右枠を透明に */
 }
 .limited-sleep-face-cell.limited-cell-no-top-border {
-    border-top: 1px solid #ddd; /* 通常のセルの枠線に戻す */
+    border-top-color: transparent !important; /* 上枠を透明に */
 }
 .limited-sleep-face-cell.limited-cell-no-bottom-border {
-    border-bottom: 1px solid #ddd; /* 通常のセルの枠線に戻す */
+    border-bottom-color: transparent !important; /* 下枠を透明に */
 }
 
 table {
@@ -303,15 +331,18 @@ footer {
 }
 
 /* --- Progress Grid Layout --- */
-.progress-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4 equal-width columns */
-    gap: 4px 16px; /* 4px row gap, 16px column gap */
+.progress-list { /* progress-grid から progress-list に変更 */
+    /* display: grid; */ /* グリッドレイアウトは解除 */
+    /* grid-template-columns: repeat(4, 1fr); */
+    /* gap: 4px 16px; */
     margin-top: 10px; /* Space below the h2 heading */
 }
 
-#all-fields-progress {
-    display: contents; /* Children (.field-progress-item) will participate in the parent's grid layout */
+#all-fields-progress-list { /* all-fields-progress から all-fields-progress-list に変更 */
+    /* display: contents; */ /* 通常のブロック要素として動作させるため解除 */
+    display: flex; /* 子要素を縦に並べる */
+    flex-direction: column;
+    gap: 4px; /* 各進捗アイテム間の隙間 */
 }
 
 /* Styling for items within the progress grid */
@@ -328,8 +359,9 @@ footer {
     padding: 15px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-top: 20px;
-    margin-bottom: 20px;
+    width: 100%; /* 右カラムの幅いっぱいに広がるように指定 */
+    /* margin-top: 20px; */ /* 親の .right-column の gap で管理 */
+    /* margin-bottom: 20px; */ /* 親の .right-column の gap で管理 */
     text-align: center; /* セクション全体を中央寄せの基準に */
 }
 
@@ -347,13 +379,6 @@ footer {
     align-items: center; /* 垂直方向中央揃え */
     gap: 8px; /* 情報内の各要素の間隔 */
 }
-.ditto-pokedex-no,
-.ditto-name {
-    /* margin-right: 6px; は gap で対応 */
-}
-.ditto-sleep-type {
-    /* .suyasuya-theme-text でスタイル指定 */
-}
 
 .ditto-face-item-wrapper { /* チェックボックス群をラップする新しいコンテナ */
     display: flex;
@@ -362,9 +387,6 @@ footer {
     gap: 8px 12px;
 }
 
-.ditto-face-item {
-    /* display: inline-flex; は label に設定 */
-}
 .ditto-face-item label {
     display: inline-flex;
     align-items: center;
@@ -389,4 +411,371 @@ td.cell-content-center-aligned {
 th {
     /* ...他のスタイル... */
     text-align: left; /* デフォルトは左寄せ */
+}
+
+/* c:\Users\furui\OneDrive\ドキュメント\pokemon-sleep-tracker\pokemon-sleep-tracker\style.css */
+/* (既存のスタイルは省略) */
+
+/* ... 既存のスタイル ... */
+
+/* ---------------------------------- */
+/* フィールド別リサーチ記録テーブル用スタイル */
+/* ---------------------------------- */
+.field-research-section {
+    margin-top: 30px;
+    background-color: #f4f4f4;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    padding: 0px;
+}
+
+/* .field-research-section h2 は削除済み */
+
+.field-tables-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* PCでは3列 */
+    gap: 15px; /* テーブル間の隙間 */
+    margin-bottom: 20px;
+}
+
+.field-table-wrapper {
+    background-color: #fff;
+    border-radius: 6px;
+    padding: 15px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.field-table-wrapper h3 {
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 1.3em;
+    padding: 10px 15px 5px 15px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-width: 2px;
+    border-bottom-style: solid;
+    display: flex; /* Flexboxを使用してテキストと進捗を横並びに */
+    justify-content: space-between; /* テキストを左、進捗を右に配置 */
+    align-items: center; /* 垂直方向中央揃え */
+}
+
+.field-pokemon-table {
+    width: 100%;
+    border-collapse: collapse; /* collapseのまま */
+    font-size: 0.9em;
+}
+
+.field-pokemon-table th,
+.field-pokemon-table td {
+    border: 1px solid #ddd;
+    padding: 6px 8px;
+    text-align: left; /* デフォルトは左寄せ */
+    vertical-align: middle;
+}
+
+.field-pokemon-table th {
+    font-weight: bold;
+}
+
+/* 寝顔列のヘッダーとセルは中央寄せ */
+.field-pokemon-table th:nth-child(n+3), /* 寝顔1以降のヘッダー */
+.field-pokemon-table td:nth-child(n+3) { /* 寝顔1以降のセル */
+    text-align: center;
+}
+
+
+/* フィールド別テーブルの限定寝顔スタイル */
+.field-pokemon-table .field-limited-sleep-face-cell.utouto-limited-cell {
+    border-top: 3px solid #FFEC71;
+    border-bottom: 3px solid #FFEC71;
+    border-left: 3px solid #FFEC71;
+    border-right: 3px solid #FFEC71;
+}
+.field-pokemon-table .field-limited-sleep-face-cell.suyasuya-limited-cell {
+    border-top: 3px solid #85FBFF;
+    border-bottom: 3px solid #85FBFF;
+    border-left: 3px solid #85FBFF;
+    border-right: 3px solid #85FBFF;
+}
+.field-pokemon-table .field-limited-sleep-face-cell.gussuri-limited-cell {
+    border-top: 2px solid #5594FB;
+    border-bottom: 2px solid #5594FB;
+    border-left: 2px solid #5594FB;
+    border-right: 2px solid #5594FB;
+}
+
+/* フィールド別テーブルの限定寝顔の枠線連結 */
+/* JavaScript側で .limited-cell-no-left-border などの汎用クラスを付与しているので、 */
+/* 既存の .limited-sleep-face-cell に対する指定がそのまま適用されるはずです。 */
+/* もし専用のスタイルが必要な場合は、以下のように .field-pokemon-table をセレクタに追加します。 */
+.field-limited-sleep-face-cell.limited-cell-no-left-border {
+    border-left-color: transparent !important;
+}
+.field-limited-sleep-face-cell.limited-cell-no-right-border {
+    border-right-color: transparent !important;
+}
+.field-limited-sleep-face-cell.limited-cell-no-top-border {
+    border-top-color: transparent !important;
+}
+.field-limited-sleep-face-cell.limited-cell-no-bottom-border {
+    border-bottom-color: transparent !important;
+}
+
+
+.field-table-description {
+    text-align: center;
+    font-size: 0.9em;
+    color: #666;
+    line-height: 1.5;
+}
+
+/* フィールド別テーブル内 睡眠タイプヘッダー行 */
+.sleep-type-group-header {
+    /* background-color: #e9ecef; /* デフォルトの背景色 */
+    color: #333; /* 文字色は黒系 */
+    font-weight: bold;
+    font-size: 1.1em; /* 少しフォントサイズを大きくする */
+    text-align: left;
+    padding: 8px 10px;
+    border-top: 2px solid #ccc; /* 上の区切りを少し太く */
+    border-bottom: 1px solid #ccc;
+}
+/* 最初の睡眠タイプヘッダーの上ボーダーは消す (h3のボーダーと連続させるため) */
+.field-pokemon-table tr:first-child .sleep-type-group-header { /* 厳密には最初のtrがヘッダー行の場合 */
+    border-top: none;
+}
+
+
+/* レスポンシブ対応 */
+@media screen and (max-width: 1200px) {
+    .field-tables-grid {
+        grid-template-columns: repeat(2, 1fr); /* 中間サイズでは2列 */
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .field-tables-grid {
+        grid-template-columns: 1fr; /* スマホでは1列 */
+    }
+    /* .field-research-section h2 は削除済み */
+    .field-table-wrapper h3 {
+        font-size: 1.2em;
+    }
+    .field-pokemon-table {
+        font-size: 0.85em;
+    }
+    .field-pokemon-table th,
+    .field-pokemon-table td {
+        padding: 4px 6px;
+    }
+}
+
+/* フィールド別テーブルのh3内の進捗表示 */
+.field-header-progress {
+    font-size: 0.8em; /* h3のフォントサイズに対して少し小さく */
+    font-weight: normal; /* 通常の太さ */
+    color: #555; /* 少し薄めの文字色、テーマカラーに合わせて調整も可 */
+    white-space: nowrap; /* 折り返さないように */
+}
+
+/* --- フィールド別テーブル テーマカラー --- */
+
+/* ゴールド旧発電所 */
+#field-table-gold-wrapper h3 {
+    background-color: #fce5cd;
+    color: #333;
+    text-align: left;
+    border-bottom-color: #e8d0b9;
+}
+#field-table-gold-wrapper .field-pokemon-table th {
+    background-color: #fce5cd;
+    color: #333;
+}
+.field-theme-bg-goldkyuuhasudenjyo { /* JSで付与するクラス名 */
+    background-color: #fce5cd !important; /* !importantで汎用スタイルを上書き */
+}
+
+
+/* ラピスラズリ湖畔 */
+#field-table-lapis-wrapper h3 {
+    background-color: #d9d2e9;
+    color: #333;
+    text-align: left;
+    border-bottom-color: #c0b9d0;
+}
+#field-table-lapis-wrapper .field-pokemon-table th {
+    background-color: #d9d2e9;
+    color: #333;
+}
+.field-theme-bg-rapisurazurikohan {
+    background-color: #d9d2e9 !important;
+}
+
+/* ウノハナ雪原 */
+#field-table-snowdrop-wrapper h3 {
+    background-color: #d1dae6;
+    color: #333;
+    text-align: left;
+    border-bottom-color: #b9c2cc;
+}
+#field-table-snowdrop-wrapper .field-pokemon-table th {
+    background-color: #d1dae6;
+    color: #333;
+}
+.field-theme-bg-unohanayukihara {
+    background-color: #d1dae6 !important;
+}
+
+/* トープ洞窟 */
+#field-table-taupe-wrapper h3 {
+    background-color: #f4cccc;
+    color: #333;
+    text-align: left;
+    border-bottom-color: #e0b8b8;
+}
+#field-table-taupe-wrapper .field-pokemon-table th {
+    background-color: #f4cccc;
+    color: #333;
+}
+.field-theme-bg-tohpudoukutsu {
+    background-color: #f4cccc !important;
+}
+
+/* シアンの砂浜 */
+#field-table-cyan-wrapper h3 {
+    background-color: #c9daf8;
+    color: #333;
+    text-align: left;
+    border-bottom-color: #b0c8e0;
+}
+#field-table-cyan-wrapper .field-pokemon-table th {
+    background-color: #c9daf8;
+    color: #333;
+}
+.field-theme-bg-shiannosunahama {
+    background-color: #c9daf8 !important;
+}
+
+/* ワカクサ本島 */
+#field-table-wakakusa-wrapper h3 {
+    background-color: #d9ead3;
+    color: #333;
+    text-align: left;
+    border-bottom-color: #c0d7b4;
+}
+#field-table-wakakusa-wrapper .field-pokemon-table th {
+    background-color: #d9ead3;
+    color: #333;
+}
+.field-theme-bg-wakakusahonjima {
+    background-color: #d9ead3 !important;
+}
+
+
+/* テーブルの最初の行のセルの上ボーダーを消して、h3のボーダーと繋がっているように見せる */
+/* この指定は睡眠タイプヘッダー行の導入により、意図通りに機能しなくなる可能性があるため、 */
+/* .sleep-type-group-header の border-top で調整 */
+/*
+.field-pokemon-table tr:first-child td {
+    border-top: none;
+}
+*/
+
+/* 睡眠タイプ別テーブルのh2内の進捗表示 */
+.pokemon-table-section h2 {
+    display: flex; /* Flexboxを使用してテキストと進捗を横並びに */
+    justify-content: space-between; /* テキストを左、進捗を右に配置 */
+    align-items: center; /* 垂直方向中央揃え */
+    /* 他の既存のh2スタイル（背景色、paddingなど）はそのまま活かす */
+}
+
+.sleep-type-table-progress {
+    font-size: 0.8em; /* h2のフォントサイズに対して少し小さく */
+    font-weight: normal; /* 通常の太さ */
+    /* color: #444; */ /* デフォルトの色指定は削除し、各テーマで指定 */
+    /* margin-left: auto; */ /* 右寄せにする別の方法 */
+    white-space: nowrap; /* 折り返さないように */
+}
+
+/* 睡眠タイプ別テーブルの進捗テキストのテーマカラー */
+.utouto-section .sleep-type-table-progress {
+    color: #785513; /* うとうとテーマの文字色 */
+}
+.suyasuya-section .sleep-type-table-progress {
+    color: #17677A; /* すやすやテーマの文字色 */
+}
+.gussuri-section .sleep-type-table-progress {
+    color: #ffffff; /* ぐっすりテーマの文字色 (h2と同じ) */
+}
+
+/* --- 表示テーブル選択トグルスイッチ --- */
+.view-toggle-controls {
+    margin-top: 30px;
+    margin-bottom: 15px;
+    padding: 10px 16px;
+}
+
+.view-toggle-title {
+    font-size: 0.9em;
+    font-weight: bold;
+    margin-top: 0;
+    margin-bottom: 8px;
+    color: #555;
+}
+
+.toggle-switch-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px; /* スイッチの幅 */
+    height: 20px; /* スイッチの高さ */
+    margin-right: 8px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 20px; /* 高さに合わせて調整 */
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px; /* 丸の高さ */
+    width: 16px; /* 丸の幅 */
+    left: 2px; /* 丸の位置調整 */
+    bottom: 2px; /* 丸の位置調整 */
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #6a7fbb; /* オン時の色 (例: 緑) */
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px); /* 丸の移動距離 (スイッチの幅 - 丸の幅 - 左右の余白) */
+}
+
+.toggle-label {
+    font-size: 0.9em;
+    cursor: pointer;
 }

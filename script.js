@@ -8,15 +8,16 @@
 let pokemonSleepData = {};
 
 const LOCAL_STORAGE_KEY = 'pokemonSleepProgress';
+const LOCAL_STORAGE_VIEW_MODE_KEY = 'pokemonSleepTableViewMode'; // 表示モード保存用キー
 const MAX_SLEEP_FACES_COLUMNS = 4; // テーブルに表示する寝顔の最大列数
 
 const FIELD_DISPLAY_ORDER = [
-    "ワカクサ本島",
-    "シアンの砂浜",
-    "トープ洞窟",
-    "ウノハナ雪原",
+    "ゴールド旧発電所", // 新しい順に変更
     "ラピスラズリ湖畔",
-    "ゴールド旧発電所"
+    "ウノハナ雪原",
+    "トープ洞窟",
+    "シアンの砂浜",
+    "ワカクサ本島",
 ];
 
 // --- DOM要素 ---
@@ -31,12 +32,28 @@ const uncheckAllButtonMenu = document.getElementById('uncheck-all-button-menu');
 const exportProgressButton = document.getElementById('export-progress-button');
 const importProgressInput = document.getElementById('import-progress-input');
 // const importProgressLabel = document.getElementById('import-progress-label'); // HTML側でlabelにfor属性があるので、inputだけで十分
-const allFieldsProgressDiv = document.getElementById('all-fields-progress');
+const allFieldsProgressDiv = document.getElementById('all-fields-progress-list'); // ID変更に合わせて修正
 // 新しいテーブルボディへの参照
 const utoutoTableBody = document.getElementById('utouto-table-body');
 const suyasuyaTableBody = document.getElementById('suyasuya-table-body');
 const gussuriTableBody = document.getElementById('gussuri-table-body');
 const dittoSleepFacesContainer = document.getElementById('ditto-sleep-faces-container');
+// フィールド別テーブルのtbody要素 (HTMLで定義されているIDを想定)
+const fieldTableBodyMap = {
+    "ワカクサ本島": document.getElementById('field-wakakusa-table-body'),
+    "シアンの砂浜": document.getElementById('field-cyan-table-body'),
+    "トープ洞窟": document.getElementById('field-taupe-table-body'),
+    "ウノハナ雪原": document.getElementById('field-snowdrop-table-body'),
+    "ラピスラズリ湖畔": document.getElementById('field-lapis-table-body'),
+    "ゴールド旧発電所": document.getElementById('field-gold-table-body')
+    // HTML側のIDと一致させてください
+};
+// 表示切り替え用トグルスイッチ
+const toggleTypeTables = document.getElementById('toggle-type-tables');
+const toggleFieldTables = document.getElementById('toggle-field-tables');
+const pokemonTablesContainer = document.querySelector('.pokemon-tables-container'); // タイプ別テーブルの親コンテナ
+const fieldResearchTablesSection = document.getElementById('field-research-tables'); // フィールド別テーブルのセクション
+;
 
 
 // --- データ初期化・処理関数 ---
@@ -47,12 +64,10 @@ const dittoSleepFacesContainer = document.getElementById('ditto-sleep-faces-cont
 async function loadMasterData() {
     try {
         const response = await fetch('pokemon_data.json');
-        console.log('loadMasterData: fetch response status:', response.status); // DEBUG
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const masterData = await response.json();
-        console.log('マスターデータをロードしました:', masterData); // DEBUG
         return masterData;
     } catch (error) {
         console.error('マスターデータのロードに失敗しました:', error);
@@ -125,7 +140,6 @@ function mergeUserProgress(loadedUserProgress) {
             });
         }
     }
-    console.log('ユーザー進捗をマージしました。');
 }
 
 /**
@@ -270,18 +284,22 @@ function renderPokemonList() {
     suyasuyaTableBody.innerHTML = '';
     gussuriTableBody.innerHTML = '';
 
-    // ヘッダーセルのテキスト寄せを更新
-    const tableIds = ['utouto-pokemon-table', 'suyasuya-pokemon-table', 'gussuri-pokemon-table'];
-    tableIds.forEach(tableId => {
+    // テーブルヘッダーのテキストを更新（「No.」と「☆X」）
+    ['utouto-pokemon-table', 'suyasuya-pokemon-table', 'gussuri-pokemon-table'].forEach(tableId => {
         const table = document.getElementById(tableId);
         if (table) {
             const headerCells = table.querySelectorAll('thead th');
             headerCells.forEach((th, index) => {
-                // 寝顔1以降のヘッダーセル (インデックス2から)
-                if (index >= 2) {
+                if (index === 0) {
+                    th.textContent = 'No.';
+                } else if (index === 1) {
+                    // ポケモン列はそのまま
+                } else if (index >= 2 && index < 2 + MAX_SLEEP_FACES_COLUMNS) {
+                    th.textContent = `☆${index - 1}`; // indexが2なら☆1, 3なら☆2...
                     th.classList.add('cell-content-center-aligned');
                     th.classList.remove('cell-content-left-aligned'); //念のため削除
                 } else {
+                    // その他のヘッダー（もしあれば）
                     th.classList.remove('cell-content-left-aligned', 'cell-content-center-aligned');
                 }
             });
@@ -314,6 +332,36 @@ function renderPokemonList() {
                     data: pokemonSleepData[pokemonName]
                 });
             }
+        }
+
+        // この睡眠タイプの寝顔情報を集計
+        let totalTypeFaces = 0;
+        let discoveredTypeFaces = 0;
+        let unresearchedLimitedTypeFaces = 0;
+
+        pokemonOfThisType.forEach(pokemonItem => {
+            // メタモンは集計から除外（専用テーブルがあるため）
+            if (pokemonItem.name === "メタモン") return;
+
+            pokemonItem.data.sleep_faces.forEach(face => {
+                totalTypeFaces++;
+                if (face.discovered) {
+                    discoveredTypeFaces++;
+                }
+                // この睡眠タイプに属するポケモンの限定寝顔で未リサーチのもの
+                if (face.isLimited && !face.discovered) {
+                    unresearchedLimitedTypeFaces++;
+                }
+            });
+        });
+
+        const typeProgressPercentage = totalTypeFaces > 0 ? (discoveredTypeFaces / totalTypeFaces) * 100 : 0;
+        const headerText = `${currentSleepType} <span class="sleep-type-table-progress">${typeProgressPercentage.toFixed(1)}% ( ${unresearchedLimitedTypeFaces} )</span>`;
+        
+        // 対応するh2要素を見つけてinnerHTMLを更新
+        const h2Element = targetTableBody.closest('.pokemon-table-section').querySelector('h2');
+        if (h2Element) {
+            h2Element.innerHTML = headerText;
         }
 
         // 2. 図鑑No.でソート (数値として比較)
@@ -352,7 +400,7 @@ function renderPokemonList() {
             for (let i = 1; i <= MAX_SLEEP_FACES_COLUMNS; i++) {
                 const columnIndex = i - 1;
                 const tdSleepFace = document.createElement('td');
-                const targetFaceName = `寝顔${i}`;
+                const targetFaceName = `☆${i}`; // JSONデータのnameに合わせて「☆」で検索
                 const face = sleepFaces.find(f => f.name === targetFaceName);
                 
                 let currentCellIsLimited = false;
@@ -394,7 +442,7 @@ function renderPokemonList() {
 
                         // 左隣の寝顔も限定かチェック (横方向)
                         if (columnIndex > 0) {
-                            const prevFaceName = `寝顔${i - 1}`;
+                            const prevFaceName = `☆${i - 1}`; // JSONデータのnameに合わせて「☆」で検索
                             const prevFace = sleepFaces.find(f => f.name === prevFaceName);
                             if (prevFace && prevFace.isLimited) {
                                 tdSleepFace.classList.add('limited-cell-no-left-border');
@@ -402,7 +450,7 @@ function renderPokemonList() {
                         }
                         // 右隣の寝顔も限定かチェック (横方向)
                         if (columnIndex < MAX_SLEEP_FACES_COLUMNS - 1) {
-                            const nextFaceName = `寝顔${i + 1}`;
+                            const nextFaceName = `☆${i + 1}`; // JSONデータのnameに合わせて「☆」で検索
                             const nextFace = sleepFaces.find(f => f.name === nextFaceName);
                             if (nextFace && nextFace.isLimited) {
                                 tdSleepFace.classList.add('limited-cell-no-right-border');
@@ -452,9 +500,8 @@ function handleCheckboxChange(event) {
         const targetFaceToUpdate = targetPokemonEntryFromData.sleep_faces.find(f => f.id === targetFaceId);
         if (targetFaceToUpdate) {
             targetFaceToUpdate.discovered = event.target.checked;
-            updateOverallProgress();
             saveProgress();
-            updateAllFieldsProgress();
+            renderAllUI(); // 全てのUIを再描画・更新
         }
     }
 }
@@ -483,7 +530,7 @@ function renderDittoTable() {
     infoDiv.classList.add('ditto-info-item'); // 新しいスタイルを適用するため
 
     const pokedexNoSpan = document.createElement('span');
-    pokedexNoSpan.textContent = `図鑑No.${dittoData.pokedex_no || '---'}`;
+    pokedexNoSpan.textContent = `No.${dittoData.pokedex_no || '---'}`;
     pokedexNoSpan.classList.add('ditto-pokedex-no');
 
     const sleepTypeSpan = document.createElement('span');
@@ -497,7 +544,7 @@ function renderDittoTable() {
     nameSpan.textContent = DITTO_NAME;
     nameSpan.classList.add('ditto-name');
 
-    // 「図鑑No.XXX メタモン すやすや」の順で追加
+    // 「No.XXX メタモン すやすや」の順で追加
     infoDiv.append(pokedexNoSpan, document.createTextNode(' '), nameSpan, document.createTextNode(' '), sleepTypeSpan);
     dittoSleepFacesContainer.appendChild(infoDiv); // 最初に情報表示を追加
 
@@ -508,7 +555,7 @@ function renderDittoTable() {
     const DITTO_MAX_FACES = 12; // メタモンの寝顔は12まであると仮定
 
     for (let i = 1; i <= DITTO_MAX_FACES; i++) {
-        const targetFaceName = `寝顔${i}`;
+        const targetFaceName = `☆${i}`; // メタモンの寝顔名はJSONデータに合わせて「寝顔」のまま
         const face = dittoData.sleep_faces.find(f => f.name === targetFaceName);
 
         if (!face) { // データに存在しない寝顔番号はスキップ
@@ -547,28 +594,10 @@ function renderDittoTable() {
     }
 }
 
-console.log('Script: Checking DOM elements for export/import. exportProgressButton:', exportProgressButton, 'importProgressInput:', importProgressInput); // DEBUG
-
-if (exportProgressButton) {
-    console.log('Script: exportProgressButton found. Attaching click listener.'); // DEBUG
-    exportProgressButton.addEventListener('click', handleExportProgress);
-} else {
-    console.error('Script: exportProgressButton NOT found!'); // DEBUG
-}
-
-if (importProgressInput) {
-    console.log('Script: importProgressInput found. Attaching change listener.'); // DEBUG
-    importProgressInput.addEventListener('change', handleImportProgress);
-} else {
-    console.error('Script: importProgressInput NOT found!'); // DEBUG
-}
-
 /**
  * 現在のリサーチ記録をJSONファイルとしてエクスポートします。
  */
 function handleExportProgress() {
-    console.log('handleExportProgress CALLED.'); // DEBUG
-    console.log('handleExportProgress: current pokemonSleepData:', JSON.parse(JSON.stringify(pokemonSleepData))); // DEBUG
     const progressToExport = {};
     for (const pokemonName in pokemonSleepData) {
         if (pokemonSleepData.hasOwnProperty(pokemonName)) {
@@ -602,21 +631,15 @@ function handleExportProgress() {
  * @param {Event} event - ファイル入力のchangeイベント
  */
 function handleImportProgress(event) {
-    console.log('handleImportProgress CALLED. Event:', event); // DEBUG
     const file = event.target.files[0];
-    console.log('handleImportProgress: Selected file:', file); // DEBUG
     if (!file) {
-        console.log('handleImportProgress: No file selected, exiting.'); // DEBUG
         return;
     }
-    console.log('handleImportProgress: current pokemonSleepData before import:', JSON.parse(JSON.stringify(pokemonSleepData))); // DEBUG
 
     const reader = new FileReader();
     reader.onload = function(e) {
-        console.log('handleImportProgress: FileReader onload triggered.'); // DEBUG
         try {
             const importedProgress = JSON.parse(e.target.result);
-            console.log('handleImportProgress: Parsed importedProgress:', importedProgress); // DEBUG
             let facesUpdatedCount = 0;
             for (const pokemonName in pokemonSleepData) {
                 if (pokemonSleepData.hasOwnProperty(pokemonName)) {
@@ -634,7 +657,6 @@ function handleImportProgress(event) {
                 }
             }
             saveProgress(); // localStorageに進捗を保存
-            console.log('handleImportProgress: Progress saved. Faces updated:', facesUpdatedCount); // DEBUG
             renderAllUI();    // 表示をすべて更新 (新しいヘルパー関数)
             alert(`${facesUpdatedCount} 件の寝顔情報をインポートし、更新しました。`);
         } catch (error) {
@@ -646,7 +668,7 @@ function handleImportProgress(event) {
         }
     };
     reader.onerror = function(e) { //念のためエラーハンドリング
-        console.error('handleImportProgress: FileReader error:', e); // DEBUG
+        console.error('FileReader error during import:', e);
     };
     reader.readAsText(file);
 }
@@ -672,9 +694,307 @@ function updateOverallProgress() {
     }
 
     const progressPercentage = totalFaces > 0 ? (discoveredFaces / totalFaces) * 100 : 0;
-    overallProgressDiv.textContent = `全体 ${progressPercentage.toFixed(1)}% ( ${discoveredFaces} / ${totalFaces} )`;
+    // HTMLとして設定するために innerHTML を使用
+    overallProgressDiv.innerHTML = `<strong>全体 ${progressPercentage.toFixed(1)}%<br>${discoveredFaces} / ${totalFaces}</strong>`;
 }
 
+/**
+ * フィールド別リサーチ記録テーブルを描画します。
+ */
+function renderFieldResearchTables() {
+    FIELD_DISPLAY_ORDER.forEach(currentField => {
+        const targetTableBody = fieldTableBodyMap[currentField];
+        if (!targetTableBody) {
+            console.warn(`フィールド '${currentField}' のテーブルボディが見つかりません。スキップします。`);
+            return;
+        }
+        targetTableBody.innerHTML = ''; // テーブルボディをクリア
+
+        // このフィールドの全体的な進捗を計算
+        let totalFieldFaces = 0;
+        let discoveredFieldFaces = 0;
+        let unresearchedLimitedFacesInField = 0;
+
+        for (const pokemonName in pokemonSleepData) {
+            const pokemonEntry = pokemonSleepData[pokemonName];
+            if (pokemonEntry && pokemonEntry.sleep_faces) {
+                pokemonEntry.sleep_faces.forEach(face => {
+                    if (face.fields && face.fields.includes(currentField)) {
+                        totalFieldFaces++;
+                        if (face.discovered) {
+                            discoveredFieldFaces++;
+                        }
+                        if (face.isLimited && face.fields.length === 1 && face.fields[0] === currentField && !face.discovered) {
+                            unresearchedLimitedFacesInField++;
+                        }
+                    }
+                });
+            }
+        }
+        const fieldProgressPercentage = totalFieldFaces > 0 ? (discoveredFieldFaces / totalFieldFaces) * 100 : 0;
+        const fieldProgressText = `<span class="field-header-progress">${fieldProgressPercentage.toFixed(1)}% ( ${unresearchedLimitedFacesInField} )</span>`;
+
+        // 対応するh3要素を見つけてinnerHTMLを更新
+        const h3Element = targetTableBody.closest('.field-table-wrapper').querySelector('h3');
+        if (h3Element) {
+            h3Element.innerHTML = `${currentField} ${fieldProgressText}`;
+        }
+
+        // 1. 現在のフィールドに出現するポケモンをフィルタリング
+        const allPokemonInThisField = [];
+        for (const pokemonName in pokemonSleepData) {
+            const pokemonEntry = pokemonSleepData[pokemonName];
+            if (pokemonEntry.sleep_faces.some(face => face.fields && face.fields.includes(currentField))) {
+                allPokemonInThisField.push({
+                    name: pokemonName,
+                    data: pokemonEntry
+                });
+            }
+        }
+
+        // 2. 睡眠タイプでグループ化
+        const groupedBySleepType = {
+            "うとうと": [],
+            "すやすや": [],
+            "ぐっすり": [],
+            "不明": [] // 念のため不明タイプも考慮
+        };
+
+        allPokemonInThisField.forEach(pokemonItem => {
+            const sleepType = pokemonItem.data.sleep_type || "不明";
+            if (groupedBySleepType.hasOwnProperty(sleepType)) {
+                groupedBySleepType[sleepType].push(pokemonItem);
+            } else {
+                groupedBySleepType["不明"].push(pokemonItem); // 未定義の睡眠タイプは不明へ
+            }
+        });
+    
+        // 日本語フィールド名をCSSクラス名サフィックスに変換するためのマッピング
+        const fieldToClassNameSuffix = {
+            "ゴールド旧発電所": "goldkyuuhasudenjyo",
+            "ラピスラズリ湖畔": "rapisurazurikohan",
+            "ウノハナ雪原": "unohanayukihara",
+            "トープ洞窟": "tohpudoukutsu",
+            "シアンの砂浜": "shiannosunahama",
+            "ワカクサ本島": "wakakusahonjima"
+        };
+        const sleepTypeOrder = ["うとうと", "すやすや", "ぐっすり", "不明"];
+
+        // 3. 各睡眠タイプグループを描画
+        for (const sleepType of sleepTypeOrder) {
+            const pokemonInThisGroup = groupedBySleepType[sleepType];
+            if (pokemonInThisGroup.length === 0) {
+                continue; // この睡眠タイプのポケモンがいなければスキップ
+            }
+
+            // 睡眠タイプヘッダー行を挿入
+            const headerRow = document.createElement('tr');
+            const headerCell = document.createElement('td');
+            headerCell.colSpan = MAX_SLEEP_FACES_COLUMNS + 2; // No. + ポケモン名 + 寝顔列数
+            headerCell.classList.add('sleep-type-group-header');
+            // テーマカラーを適用するためのクラスをフィールドごとに設定
+            const themeSuffix = fieldToClassNameSuffix[currentField];
+            if (themeSuffix) {
+                headerCell.classList.add(`field-theme-bg-${themeSuffix}`);
+            }
+
+            headerCell.textContent = sleepType; // 睡眠タイプ名のみ表示
+            if (sleepType === "不明" && pokemonInThisGroup.length === 0) { // 不明タイプでポケモンがいない場合はヘッダー自体を表示しない
+                continue;
+            }
+            headerRow.appendChild(headerCell);
+            targetTableBody.appendChild(headerRow);
+
+            // 各睡眠タイプグループの直下にテーブルヘッダー行を挿入
+            const tableHeaderRow = document.createElement('tr');
+            tableHeaderRow.classList.add('field-table-sub-header'); // スタイル付け用クラス
+            const thPokedexNo = document.createElement('th');
+            thPokedexNo.textContent = 'No.';
+            tableHeaderRow.appendChild(thPokedexNo);
+            const thPokemonName = document.createElement('th');
+            thPokemonName.textContent = 'ポケモン';
+            tableHeaderRow.appendChild(thPokemonName);
+
+            for (let i = 1; i <= MAX_SLEEP_FACES_COLUMNS; i++) {
+                const thSleepFace = document.createElement('th');
+                thSleepFace.textContent = `☆${i}`; // 「寝顔」を「☆」に変更
+                thSleepFace.classList.add('cell-content-center-aligned'); // ヘッダーも中央寄せ
+                tableHeaderRow.appendChild(thSleepFace);
+            }
+            targetTableBody.appendChild(tableHeaderRow);
+
+            // 前の行の寝顔セルの情報を保持 (睡眠タイプグループごとにリセット)
+            let prevRowSleepFaceCellsData = Array(MAX_SLEEP_FACES_COLUMNS).fill(null).map(() => ({
+                tdElement: null,
+                isFieldLimited: false
+            }));
+
+            // グループ内のポケモンを図鑑No.でソート
+            pokemonInThisGroup.sort((a, b) => {
+                const numA = parseInt(a.data.pokedex_no, 10) || 99999;
+                const numB = parseInt(b.data.pokedex_no, 10) || 99999;
+                return numA - numB;
+            });
+
+            // ソートされたポケモンを描画
+            for (const pokemonItem of pokemonInThisGroup) {
+                const pokemonName = pokemonItem.name;
+                const pokemonEntry = pokemonItem.data;
+
+                if (pokemonName === "メタモン") {
+                    continue; // メタモンは専用テーブルがあるのでスキップ
+                }
+
+                const currentRowSleepFaceCellsData = Array(MAX_SLEEP_FACES_COLUMNS).fill(null).map(() => ({
+                    tdElement: null,
+                    isFieldLimited: false
+                }));
+
+                const tr = document.createElement('tr');
+
+                const tdPokedexNo = document.createElement('td');
+                tdPokedexNo.textContent = pokemonEntry.pokedex_no || "---";
+                tr.appendChild(tdPokedexNo);
+
+                const tdPokemonName = document.createElement('td');
+                tdPokemonName.textContent = pokemonName;
+                tr.appendChild(tdPokemonName);
+
+                const sleepFacesInThisField = pokemonEntry.sleep_faces.filter(
+                    face => face.fields && face.fields.includes(currentField)
+                );
+
+                const facesToDisplay = [];
+                for (let i = 1; i <= MAX_SLEEP_FACES_COLUMNS; i++) {
+                    const faceName = `☆${i}`; // JSONデータのnameに合わせて「☆」で検索
+                    const face = sleepFacesInThisField.find(f => f.name === faceName);
+                    facesToDisplay.push(face);
+                }
+
+                for (let i = 0; i < MAX_SLEEP_FACES_COLUMNS; i++) {
+                    const tdSleepFace = document.createElement('td');
+                    const face = facesToDisplay[i];
+                    let currentCellIsFieldLimited = false;
+
+                    if (face) {
+                        const checkboxId = `field-${currentField}-${sleepType}-face-${face.id || `${pokemonName}-${face.name}`.replace(/\s+/g, '_')}`;
+                        const label = document.createElement('label');
+                        label.htmlFor = checkboxId;
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.id = checkboxId;
+                        checkbox.classList.add('sleep-face-checkbox');
+                        checkbox.checked = face.discovered;
+                        checkbox.dataset.pokemon = pokemonName;
+                        checkbox.dataset.faceId = face.id;
+                        checkbox.addEventListener('change', handleCheckboxChange);
+                        label.appendChild(checkbox);
+                        tdSleepFace.appendChild(label);
+                        tdSleepFace.classList.add('cell-content-center-aligned');
+
+                        // このフィールドでの限定寝顔か判定
+                        if (face.fields && face.fields.length === 1 && face.fields[0] === currentField) {
+                            currentCellIsFieldLimited = true;
+                            tdSleepFace.classList.add('field-limited-sleep-face-cell');
+                            // 睡眠タイプ別の限定枠クラスも追加 (CSSで色分けする場合)
+                            const pokemonSleepType = pokemonEntry.sleep_type;
+                            if (pokemonSleepType === "うとうと") tdSleepFace.classList.add('utouto-limited-cell');
+                            else if (pokemonSleepType === "すやすや") tdSleepFace.classList.add('suyasuya-limited-cell');
+                            else if (pokemonSleepType === "ぐっすり") tdSleepFace.classList.add('gussuri-limited-cell');
+
+
+                            // 横方向の連結
+                            if (i > 0 && facesToDisplay[i-1] && facesToDisplay[i-1].fields && facesToDisplay[i-1].fields.length === 1 && facesToDisplay[i-1].fields[0] === currentField) {
+                                tdSleepFace.classList.add('limited-cell-no-left-border');
+                            }
+                            if (i < MAX_SLEEP_FACES_COLUMNS - 1 && facesToDisplay[i+1] && facesToDisplay[i+1].fields && facesToDisplay[i+1].fields.length === 1 && facesToDisplay[i+1].fields[0] === currentField) {
+                                tdSleepFace.classList.add('limited-cell-no-right-border');
+                            }
+                        }
+                    } else {
+                        tdSleepFace.textContent = '-';
+                        tdSleepFace.classList.add('cell-content-center-aligned');
+                    }
+
+                    // 縦方向の連結
+                    if (currentCellIsFieldLimited) {
+                        const cellAboveData = prevRowSleepFaceCellsData[i];
+                        // 上のセルも同じフィールドの限定寝顔であれば連結
+                        if (cellAboveData && cellAboveData.isFieldLimited) { 
+                            tdSleepFace.classList.add('limited-cell-no-top-border');
+                            if (cellAboveData.tdElement) {
+                                cellAboveData.tdElement.classList.add('limited-cell-no-bottom-border');
+                            }
+                        }
+                    }
+                    currentRowSleepFaceCellsData[i] = { tdElement: tdSleepFace, isFieldLimited: currentCellIsFieldLimited };
+                    tr.appendChild(tdSleepFace);
+                }
+                targetTableBody.appendChild(tr);
+                prevRowSleepFaceCellsData = currentRowSleepFaceCellsData;
+            }
+        }
+    });
+}
+
+/**
+ * テーブル表示モードを更新し、localStorageに保存します。
+ */
+function updateTableViewMode() {
+    if (!pokemonTablesContainer || !fieldResearchTablesSection || !toggleTypeTables || !toggleFieldTables) {
+        return;
+    }
+
+    const showTypeTables = toggleTypeTables.checked;
+    const showFieldTables = toggleFieldTables.checked;
+
+    pokemonTablesContainer.classList.toggle('hidden', !showTypeTables);
+    fieldResearchTablesSection.classList.toggle('hidden', !showFieldTables);
+
+    // localStorageに状態を保存
+    localStorage.setItem(LOCAL_STORAGE_VIEW_MODE_KEY, JSON.stringify({
+        showType: showTypeTables,
+        showField: showFieldTables
+    }));
+    // renderAllUI(); // 表示切替時に再描画を試みる (パフォーマンスに注意)
+}
+
+/**
+ * localStorageからテーブル表示モードを読み込み、適用します。
+ */
+function loadTableViewMode() {
+    if (!toggleTypeTables || !toggleFieldTables) return;
+
+    const savedViewMode = localStorage.getItem(LOCAL_STORAGE_VIEW_MODE_KEY);
+    if (savedViewMode) {
+        try {
+            const { showType, showField } = JSON.parse(savedViewMode);
+            // 両方falseの場合はデフォルト（両方true）に戻す
+            if (typeof showType === 'boolean' && typeof showField === 'boolean') {
+                if (!showType && !showField) {
+                    toggleTypeTables.checked = true;
+                    toggleFieldTables.checked = true;
+                } else {
+                    toggleTypeTables.checked = showType;
+                    toggleFieldTables.checked = showField;
+                }
+            } else { // 不正なデータの場合はデフォルト
+                toggleTypeTables.checked = true;
+                toggleFieldTables.checked = true;
+            }
+        } catch (e) {
+            console.error("Error parsing saved view mode:", e);
+            // エラー時もデフォルト
+            toggleTypeTables.checked = true;
+            toggleFieldTables.checked = true;
+        }
+    } else {
+        // 保存された設定がない場合はデフォルト（両方表示）
+        toggleTypeTables.checked = true;
+        toggleFieldTables.checked = true;
+    }
+    updateTableViewMode(); // 初期表示を更新
+}
 // --- イベントリスナー ---
 // saveButton のイベントリスナーは削除 (ボタン自体を削除したため)
 // loadButton のイベントリスナーは削除 (ボタン自体を削除したため)
@@ -688,6 +1008,15 @@ if (uncheckAllButtonMenu) uncheckAllButtonMenu.addEventListener('click', () => {
     uncheckAllFaces();
     if (settingsDropdown) settingsDropdown.classList.add('hidden'); // メニューを閉じる
 });
+
+if (exportProgressButton) {
+    exportProgressButton.addEventListener('click', handleExportProgress);
+}
+
+if (importProgressInput) {
+    importProgressInput.addEventListener('change', handleImportProgress);
+}
+
 
 if (settingsButton && settingsDropdown) {
     settingsButton.addEventListener('click', (event) => {
@@ -703,12 +1032,33 @@ if (settingsButton && settingsDropdown) {
     });
 }
 
+if (toggleTypeTables) {
+    toggleTypeTables.addEventListener('change', () => {
+        if (!toggleTypeTables.checked && !toggleFieldTables.checked) {
+            // 両方オフにしようとしたら、もう片方をオンにする
+            toggleFieldTables.checked = true;
+        }
+        updateTableViewMode();
+    });
+}
+
+if (toggleFieldTables) {
+    toggleFieldTables.addEventListener('change', () => {
+        if (!toggleFieldTables.checked && !toggleTypeTables.checked) {
+            // 両方オフにしようとしたら、もう片方をオンにする
+            toggleTypeTables.checked = true;
+        }
+        updateTableViewMode();
+    });
+}
+
 /**
  * UIの主要な描画処理と進捗更新をまとめて行うヘルパー関数
  */
 function renderAllUI() {
     renderPokemonList();
     renderDittoTable();
+    renderFieldResearchTables(); // 新しいテーブルの描画を追加
     updateAllFieldsProgress();
     updateOverallProgress();
 }
@@ -718,10 +1068,8 @@ function renderAllUI() {
  * アプリケーションの初期化処理
  */
 async function initializeApp() {
-    console.log('initializeApp: START'); // DEBUG
     const masterData = await loadMasterData();
     if (!masterData || Object.keys(masterData).length === 0) { // masterDataがnullまたは空の場合
-        console.error('initializeApp: Master data is null or empty after loadMasterData.'); // DEBUG
         // マスターデータがロードできなかった場合、適切なエラーメッセージを表示するか、
         // アプリケーションの初期化をここで中断するなどの処理が必要
         if (utoutoTableBody || suyasuyaTableBody || gussuriTableBody) { // いずれかのテーブルボディがあればそこにエラー表示する例
@@ -730,15 +1078,13 @@ async function initializeApp() {
              if (suyasuyaTableBody) suyasuyaTableBody.innerHTML = errorMsg;
              if (gussuriTableBody) gussuriTableBody.innerHTML = errorMsg;
         }
-        console.error("initializeApp: マスターデータのロードに失敗したため、アプリケーションの初期化を中断します。");
+        console.error("マスターデータのロードに失敗したため、アプリケーションの初期化を中断します。");
         return;
     }
-    console.log('initializeApp: Master data loaded successfully:', JSON.parse(JSON.stringify(masterData))); // DEBUG
 
     pokemonSleepData = buildInitialSleepData(masterData);
-    console.log('initializeApp: pokemonSleepData after buildInitialSleepData:', JSON.parse(JSON.stringify(pokemonSleepData))); // DEBUG
     loadProgress();
-    console.log('initializeApp: pokemonSleepData after loadProgress:', JSON.parse(JSON.stringify(pokemonSleepData))); // DEBUG
+    loadTableViewMode(); // 表示モードを読み込んで適用
     renderAllUI(); // UI描画をヘルパー関数で実行
 
     const currentYearSpan = document.getElementById('current-year');
@@ -746,9 +1092,7 @@ async function initializeApp() {
         currentYearSpan.textContent = new Date().getFullYear();
     }
 }
-console.log('Script: Adding DOMContentLoaded listener.'); // DEBUG
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOMContentLoaded event fired. Running initializeApp.'); // DEBUG
     initializeApp();
 });

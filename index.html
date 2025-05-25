@@ -12,100 +12,186 @@
         <!-- <h1>ポケモンスリープ 寝顔図鑑トラッカー</h1> -->
     </header>
 
-    <main>
-        <section id="progress-summary" class="progress-section" aria-labelledby="progress-summary-heading">
-            <div class="main-heading-controls-container">
-                <h2 id="progress-summary-heading">Pokemon Sleep 寝顔図鑑トラッカー</h2>
-                <div class="settings-menu-container">
-                    <button id="settings-button">⚙️</button>
-                    <div id="settings-dropdown" class="settings-dropdown-content hidden">
-                        <button class="settings-dropdown-item" id="check-all-button-menu">すべてのチェックON</button>
-                        <button class="settings-dropdown-item" id="uncheck-all-button-menu">すべてのチェックOFF</button>
-                        <hr class="settings-dropdown-divider">
-                        <button class="settings-dropdown-item" id="export-progress-button">エクスポート</button>
-                        <label class="settings-dropdown-item" for="import-progress-input" id="import-progress-label">
-                            インポート
-                            <input type="file" id="import-progress-input" accept=".json" style="display: none;">
-                        </label>
+    <main class="two-column-layout">
+        <aside class="left-column">
+            <section id="progress-summary" class="progress-section" aria-labelledby="progress-summary-heading">
+                <div class="main-heading-controls-container">
+                    <h2 id="progress-summary-heading">Pokemon Sleep<br>寝顔図鑑トラッカー</h2>
+                    <div class="settings-menu-container">
+                        <button id="settings-button">⚙️</button>
+                        <div id="settings-dropdown" class="settings-dropdown-content hidden">
+                            <button class="settings-dropdown-item" id="check-all-button-menu">すべてのチェックON</button>
+                            <button class="settings-dropdown-item" id="uncheck-all-button-menu">すべてのチェックOFF</button>
+                            <hr class="settings-dropdown-divider">
+                            <button class="settings-dropdown-item" id="export-progress-button">エクスポート</button>
+                            <label class="settings-dropdown-item" for="import-progress-input" id="import-progress-label">
+                                インポート
+                                <input type="file" id="import-progress-input" accept=".json" style="display: none;">
+                            </label>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="progress-grid">
-                <p id="overall-progress-grid-item"><span id="overall-progress" aria-live="polite">全体 0.0% ( 0 / 0 )</span></p>
-                <div id="all-fields-progress">
-                    <!-- JavaScript inserts .field-progress-item divs here -->
+                <div class="progress-list"> <!-- progress-grid から progress-list に変更 -->
+                    <p id="overall-progress-list-item"><span id="overall-progress" aria-live="polite">全体 0.0% ( 0 / 0 )</span></p>
+                    <div id="all-fields-progress-list"> <!-- all-fields-progress から all-fields-progress-list に変更 -->
+                        <!-- JavaScript inserts .field-progress-item divs here -->
+                    </div>
+                </div>
+                <p class="progress-description">
+                    カッコ内は、限定寝顔の未リサーチ数です。
+                    色枠で囲われている寝顔は、限定寝顔です。
+                    限定寝顔とは、特定のフィールドのみで出現する寝顔のことです。
+                    チェックボックスのON・OFFは各テーブル間で連動しています。
+                </p>
+                <div class="view-toggle-controls">
+                    <div class="toggle-switch-container">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-field-tables" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <label for="toggle-field-tables" class="toggle-label">フィールド別</label>
+                    </div>
+                    <div class="toggle-switch-container">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-type-tables" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <label for="toggle-type-tables" class="toggle-label">睡眠タイプ別</label>
+                    </div>
+                    </fieldset>
+                </div>
+            </section>
+        </aside>
+
+        <div class="right-column">
+            <section id="field-research-tables" class="field-research-section">
+                <!-- <h2>フィールド別 リサーチ記録</h2> を削除 -->
+                <div class="field-tables-grid">
+                    <!-- ゴールド旧発電所 -->
+                    <div class="field-table-wrapper" id="field-table-gold-wrapper">
+                        <h3>ゴールド旧発電所</h3>
+                        <table class="field-pokemon-table">
+                            <tbody id="field-gold-table-body">
+                                <!-- JavaScriptでポケモンリストがここに挿入されます -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- ラピスラズリ湖畔 -->
+                    <div class="field-table-wrapper" id="field-table-lapis-wrapper">
+                        <h3>ラピスラズリ湖畔</h3>
+                        <table class="field-pokemon-table">
+                            <tbody id="field-lapis-table-body">
+                                <!-- JavaScriptでポケモンリストがここに挿入されます -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- ウノハナ雪原 -->
+                    <div class="field-table-wrapper" id="field-table-snowdrop-wrapper">
+                        <h3>ウノハナ雪原</h3>
+                        <table class="field-pokemon-table">
+                            <tbody id="field-snowdrop-table-body">
+                                <!-- JavaScriptでポケモンリストがここに挿入されます -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- トープ洞窟 -->
+                    <div class="field-table-wrapper" id="field-table-taupe-wrapper">
+                        <h3>トープ洞窟</h3>
+                        <table class="field-pokemon-table">
+                            <tbody id="field-taupe-table-body">
+                                <!-- JavaScriptでポケモンリストがここに挿入されます -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- シアンの砂浜 -->
+                    <div class="field-table-wrapper" id="field-table-cyan-wrapper">
+                        <h3>シアンの砂浜</h3>
+                        <table class="field-pokemon-table">
+                            <tbody id="field-cyan-table-body">
+                                <!-- JavaScriptでポケモンリストがここに挿入されます -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- ワカクサ本島 -->
+                    <div class="field-table-wrapper" id="field-table-wakakusa-wrapper">
+                        <h3>ワカクサ本島</h3>
+                        <table class="field-pokemon-table">
+                            <tbody id="field-wakakusa-table-body">
+                                <!-- JavaScriptでポケモンリストがここに挿入されます -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <div class="pokemon-tables-container">
+                <div class="pokemon-table-section utouto-section">
+                    <h2>うとうと</h2>
+                    <table id="utouto-pokemon-table">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>ポケモン</th>
+                                <th>☆1</th>
+                                <th>☆2</th>
+                                <th>☆3</th>
+                                <th>☆4</th>
+                            </tr>
+                        </thead>
+                        <tbody id="utouto-table-body">
+                            <!-- ポケモンリストがここに挿入されます -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pokemon-table-section suyasuya-section">
+                    <h2>すやすや</h2>
+                    <table id="suyasuya-pokemon-table">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>ポケモン</th>
+                                <th>☆1</th>
+                                <th>☆2</th>
+                                <th>☆3</th>
+                                <th>☆4</th>
+                            </tr>
+                        </thead>
+                        <tbody id="suyasuya-table-body">
+                            <!-- ポケモンリストがここに挿入されます -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pokemon-table-section gussuri-section">
+                    <h2>ぐっすり</h2>
+                    <table id="gussuri-pokemon-table">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>ポケモン</th>
+                                <th>☆1</th>
+                                <th>☆2</th>
+                                <th>☆3</th>
+                                <th>☆4</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gussuri-table-body">
+                            <!-- ポケモンリストがここに挿入されます -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            <p class="progress-description">フィールド名 リサーチ率 （限定寝顔 未リサーチ数）</p>
-        </section>
 
-        <div class="pokemon-tables-container">
-            <div class="pokemon-table-section utouto-section">
-                <h2>うとうとタイプ</h2>
-                <table id="utouto-pokemon-table">
-                    <thead>
-                        <tr>
-                            <th>図鑑No.</th>
-                            <th>ポケモン</th>
-                            <th>寝顔1</th>
-                            <th>寝顔2</th>
-                            <th>寝顔3</th>
-                            <th>寝顔4</th>
-                        </tr>
-                    </thead>
-                    <tbody id="utouto-table-body">
-                        <!-- ポケモンリストがここに挿入されます -->
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="pokemon-table-section suyasuya-section">
-                <h2>すやすやタイプ</h2>
-                <table id="suyasuya-pokemon-table">
-                    <thead>
-                        <tr>
-                            <th>図鑑No.</th>
-                            <th>ポケモン</th>
-                            <th>寝顔1</th>
-                            <th>寝顔2</th>
-                            <th>寝顔3</th>
-                            <th>寝顔4</th>
-                        </tr>
-                    </thead>
-                    <tbody id="suyasuya-table-body">
-                        <!-- ポケモンリストがここに挿入されます -->
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="pokemon-table-section gussuri-section">
-                <h2>ぐっすりタイプ</h2>
-                <table id="gussuri-pokemon-table">
-                    <thead>
-                        <tr>
-                            <th>図鑑No.</th>
-                            <th>ポケモン</th>
-                            <th>寝顔1</th>
-                            <th>寝顔2</th>
-                            <th>寝顔3</th>
-                            <th>寝顔4</th>
-                        </tr>
-                    </thead>
-                    <tbody id="gussuri-table-body">
-                        <!-- ポケモンリストがここに挿入されます -->
-                    </tbody>
-                </table>
-            </div>
+            <!-- メタモン専用セクション (フィールド別テーブルの下、右カラム内に移動) -->
+            <section class="ditto-table-section">
+                <!-- <h2>メタモン</h2> を削除 -->
+                <div id="ditto-sleep-faces-container" class="ditto-sleep-faces-container">
+                    <!-- メタモンの情報と寝顔チェックボックスがここに挿入されます -->
+                </div>
+            </section>
         </div>
-
-        <!-- メタモン専用セクション -->
-        <section class="ditto-table-section">
-            <!-- <h2>メタモン</h2> を削除 -->
-            <div id="ditto-sleep-faces-container" class="ditto-sleep-faces-container">
-                <!-- メタモンの情報と寝顔チェックボックスがここに挿入されます -->
-            </div>
-        </section>
-
+        
     </main>
 
     <footer>
