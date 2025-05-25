@@ -47,11 +47,12 @@ const dittoSleepFacesContainer = document.getElementById('ditto-sleep-faces-cont
 async function loadMasterData() {
     try {
         const response = await fetch('pokemon_data.json');
+        console.log('loadMasterData: fetch response status:', response.status); // DEBUG
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const masterData = await response.json();
-        console.log('マスターデータをロードしました。');
+        console.log('マスターデータをロードしました:', masterData); // DEBUG
         return masterData;
     } catch (error) {
         console.error('マスターデータのロードに失敗しました:', error);
@@ -546,18 +547,28 @@ function renderDittoTable() {
     }
 }
 
+console.log('Script: Checking DOM elements for export/import. exportProgressButton:', exportProgressButton, 'importProgressInput:', importProgressInput); // DEBUG
+
 if (exportProgressButton) {
+    console.log('Script: exportProgressButton found. Attaching click listener.'); // DEBUG
     exportProgressButton.addEventListener('click', handleExportProgress);
+} else {
+    console.error('Script: exportProgressButton NOT found!'); // DEBUG
 }
 
 if (importProgressInput) {
+    console.log('Script: importProgressInput found. Attaching change listener.'); // DEBUG
     importProgressInput.addEventListener('change', handleImportProgress);
+} else {
+    console.error('Script: importProgressInput NOT found!'); // DEBUG
 }
 
 /**
  * 現在のリサーチ記録をJSONファイルとしてエクスポートします。
  */
 function handleExportProgress() {
+    console.log('handleExportProgress CALLED.'); // DEBUG
+    console.log('handleExportProgress: current pokemonSleepData:', JSON.parse(JSON.stringify(pokemonSleepData))); // DEBUG
     const progressToExport = {};
     for (const pokemonName in pokemonSleepData) {
         if (pokemonSleepData.hasOwnProperty(pokemonName)) {
@@ -591,15 +602,21 @@ function handleExportProgress() {
  * @param {Event} event - ファイル入力のchangeイベント
  */
 function handleImportProgress(event) {
+    console.log('handleImportProgress CALLED. Event:', event); // DEBUG
     const file = event.target.files[0];
+    console.log('handleImportProgress: Selected file:', file); // DEBUG
     if (!file) {
+        console.log('handleImportProgress: No file selected, exiting.'); // DEBUG
         return;
     }
+    console.log('handleImportProgress: current pokemonSleepData before import:', JSON.parse(JSON.stringify(pokemonSleepData))); // DEBUG
 
     const reader = new FileReader();
     reader.onload = function(e) {
+        console.log('handleImportProgress: FileReader onload triggered.'); // DEBUG
         try {
             const importedProgress = JSON.parse(e.target.result);
+            console.log('handleImportProgress: Parsed importedProgress:', importedProgress); // DEBUG
             let facesUpdatedCount = 0;
             for (const pokemonName in pokemonSleepData) {
                 if (pokemonSleepData.hasOwnProperty(pokemonName)) {
@@ -617,6 +634,7 @@ function handleImportProgress(event) {
                 }
             }
             saveProgress(); // localStorageに進捗を保存
+            console.log('handleImportProgress: Progress saved. Faces updated:', facesUpdatedCount); // DEBUG
             renderAllUI();    // 表示をすべて更新 (新しいヘルパー関数)
             alert(`${facesUpdatedCount} 件の寝顔情報をインポートし、更新しました。`);
         } catch (error) {
@@ -626,6 +644,9 @@ function handleImportProgress(event) {
             if (settingsDropdown) settingsDropdown.classList.add('hidden'); // 後にメニューを閉じる
             if (importProgressInput) importProgressInput.value = ''; // ファイル選択をリセットして同じファイルを再選択可能にする
         }
+    };
+    reader.onerror = function(e) { //念のためエラーハンドリング
+        console.error('handleImportProgress: FileReader error:', e); // DEBUG
     };
     reader.readAsText(file);
 }
@@ -697,8 +718,10 @@ function renderAllUI() {
  * アプリケーションの初期化処理
  */
 async function initializeApp() {
+    console.log('initializeApp: START'); // DEBUG
     const masterData = await loadMasterData();
     if (!masterData || Object.keys(masterData).length === 0) { // masterDataがnullまたは空の場合
+        console.error('initializeApp: Master data is null or empty after loadMasterData.'); // DEBUG
         // マスターデータがロードできなかった場合、適切なエラーメッセージを表示するか、
         // アプリケーションの初期化をここで中断するなどの処理が必要
         if (utoutoTableBody || suyasuyaTableBody || gussuriTableBody) { // いずれかのテーブルボディがあればそこにエラー表示する例
@@ -707,12 +730,15 @@ async function initializeApp() {
              if (suyasuyaTableBody) suyasuyaTableBody.innerHTML = errorMsg;
              if (gussuriTableBody) gussuriTableBody.innerHTML = errorMsg;
         }
-        console.error("マスターデータのロードに失敗したため、アプリケーションの初期化を中断します。");
+        console.error("initializeApp: マスターデータのロードに失敗したため、アプリケーションの初期化を中断します。");
         return;
     }
+    console.log('initializeApp: Master data loaded successfully:', JSON.parse(JSON.stringify(masterData))); // DEBUG
 
     pokemonSleepData = buildInitialSleepData(masterData);
+    console.log('initializeApp: pokemonSleepData after buildInitialSleepData:', JSON.parse(JSON.stringify(pokemonSleepData))); // DEBUG
     loadProgress();
+    console.log('initializeApp: pokemonSleepData after loadProgress:', JSON.parse(JSON.stringify(pokemonSleepData))); // DEBUG
     renderAllUI(); // UI描画をヘルパー関数で実行
 
     const currentYearSpan = document.getElementById('current-year');
@@ -720,7 +746,9 @@ async function initializeApp() {
         currentYearSpan.textContent = new Date().getFullYear();
     }
 }
+console.log('Script: Adding DOMContentLoaded listener.'); // DEBUG
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded event fired. Running initializeApp.'); // DEBUG
     initializeApp();
 });
