@@ -19,8 +19,14 @@
                 <div class="settings-menu-container">
                     <button id="settings-button">⚙️</button>
                     <div id="settings-dropdown" class="settings-dropdown-content hidden">
-                        <button class="settings-dropdown-item" id="check-all-button-menu">すべてのチェック ON</button>
-                        <button class="settings-dropdown-item" id="uncheck-all-button-menu">すべてのチェック OFF</button>
+                        <button class="settings-dropdown-item" id="check-all-button-menu">すべてのチェックON</button>
+                        <button class="settings-dropdown-item" id="uncheck-all-button-menu">すべてのチェックOFF</button>
+                        <hr class="settings-dropdown-divider">
+                        <button class="settings-dropdown-item" id="export-progress-button">エクスポート</button>
+                        <label class="settings-dropdown-item" for="import-progress-input" id="import-progress-label">
+                            インポート
+                            <input type="file" id="import-progress-input" accept=".json" style="display: none;">
+                        </label>
                     </div>
                 </div>
             </div>

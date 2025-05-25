@@ -139,6 +139,11 @@ button.danger:hover {
     vertical-align: middle;
 }
 
+.settings-dropdown-divider {
+    border: 0;
+    border-top: 1px solid #e0e0e0; /* 少し薄い色の線 */
+    margin: 5px 0; /* 上下のマージン */
+}
 
 .hidden { /* JavaScriptで表示・非表示を切り替えるためのクラス */
     display: none !important;

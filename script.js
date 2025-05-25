@@ -28,6 +28,9 @@ const settingsButton = document.getElementById('settings-button');
 const settingsDropdown = document.getElementById('settings-dropdown');
 const checkAllButtonMenu = document.getElementById('check-all-button-menu');
 const uncheckAllButtonMenu = document.getElementById('uncheck-all-button-menu');
+const exportProgressButton = document.getElementById('export-progress-button');
+const importProgressInput = document.getElementById('import-progress-input');
+// const importProgressLabel = document.getElementById('import-progress-label'); // HTML側でlabelにfor属性があるので、inputだけで十分
 const allFieldsProgressDiv = document.getElementById('all-fields-progress');
 // 新しいテーブルボディへの参照
 const utoutoTableBody = document.getElementById('utouto-table-body');
@@ -134,7 +137,7 @@ function saveProgress() {
         // console.log('進捗を自動保存しました。'); // コンソールログで確認できるようにするのも良い
     } catch (e) {
         console.error('ローカルストレージへの保存に失敗しました:', e);
-        alert('進捗の自動保存に失敗しました。ディスク容量などを確認してください。');
+        alert('リサーチ記録の自動保存に失敗しました。ディスク容量などを確認してください。');
     }
 }
 
@@ -543,6 +546,90 @@ function renderDittoTable() {
     }
 }
 
+if (exportProgressButton) {
+    exportProgressButton.addEventListener('click', handleExportProgress);
+}
+
+if (importProgressInput) {
+    importProgressInput.addEventListener('change', handleImportProgress);
+}
+
+/**
+ * 現在のリサーチ記録をJSONファイルとしてエクスポートします。
+ */
+function handleExportProgress() {
+    const progressToExport = {};
+    for (const pokemonName in pokemonSleepData) {
+        if (pokemonSleepData.hasOwnProperty(pokemonName)) {
+            const pokemonEntry = pokemonSleepData[pokemonName];
+            if (pokemonEntry.sleep_faces && Array.isArray(pokemonEntry.sleep_faces)) {
+                pokemonEntry.sleep_faces.forEach(face => {
+                    if (face.id) { // face.id が存在することを確認
+                        progressToExport[face.id] = face.discovered;
+                    }
+                });
+            }
+        }
+    }
+
+    const jsonString = JSON.stringify(progressToExport, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'pokemon_sleep_tracker_backup.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    if (settingsDropdown) settingsDropdown.classList.add('hidden'); // エクスポート後にメニューを閉じる
+    alert('バックアップファイルをエクスポートしました。');
+}
+
+/**
+ * 選択されたJSONファイルからインポートをします。
+ * @param {Event} event - ファイル入力のchangeイベント
+ */
+function handleImportProgress(event) {
+    const file = event.target.files[0];
+    if (!file) {
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedProgress = JSON.parse(e.target.result);
+            let facesUpdatedCount = 0;
+            for (const pokemonName in pokemonSleepData) {
+                if (pokemonSleepData.hasOwnProperty(pokemonName)) {
+                    const pokemonEntry = pokemonSleepData[pokemonName];
+                    if (pokemonEntry.sleep_faces && Array.isArray(pokemonEntry.sleep_faces)) {
+                        pokemonEntry.sleep_faces.forEach(face => {
+                            if (face.id && importedProgress.hasOwnProperty(face.id)) {
+                                if (typeof importedProgress[face.id] === 'boolean') { // 値がbooleanであることを確認
+                                    face.discovered = importedProgress[face.id];
+                                    facesUpdatedCount++;
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+            saveProgress(); // localStorageに進捗を保存
+            renderAllUI();    // 表示をすべて更新 (新しいヘルパー関数)
+            alert(`${facesUpdatedCount} 件の寝顔情報をインポートし、更新しました。`);
+        } catch (error) {
+            console.error('バックアップファイルのインポートに失敗しました:', error);
+            alert('バックアップファイルの読み込みまたは解析に失敗しました。\nファイルが正しいJSON形式（寝顔ID: 発見状況(true/false)）であることを確認してください。');
+        } finally {
+            if (settingsDropdown) settingsDropdown.classList.add('hidden'); // 後にメニューを閉じる
+            if (importProgressInput) importProgressInput.value = ''; // ファイル選択をリセットして同じファイルを再選択可能にする
+        }
+    };
+    reader.readAsText(file);
+}
+
 /**
  * 全体の進捗率を計算し、表示を更新します。
  */
@@ -595,17 +682,30 @@ if (settingsButton && settingsDropdown) {
     });
 }
 
+/**
+ * UIの主要な描画処理と進捗更新をまとめて行うヘルパー関数
+ */
+function renderAllUI() {
+    renderPokemonList();
+    renderDittoTable();
+    updateAllFieldsProgress();
+    updateOverallProgress();
+}
+
 // --- 初期化処理 ---
 /**
  * アプリケーションの初期化処理
  */
 async function initializeApp() {
     const masterData = await loadMasterData();
-    if (!masterData) {
+    if (!masterData || Object.keys(masterData).length === 0) { // masterDataがnullまたは空の場合
         // マスターデータがロードできなかった場合、適切なエラーメッセージを表示するか、
         // アプリケーションの初期化をここで中断するなどの処理が必要
-        if (utoutoTableBody) { // いずれかのテーブルボディがあればそこにエラー表示する例
-             utoutoTableBody.innerHTML = '<tr><td colspan="6" style="color: red; text-align: center;">ポケモンデータの読み込みに失敗しました。<br>pokemon_data.json を確認してページを再読み込みしてください。</td></tr>';
+        if (utoutoTableBody || suyasuyaTableBody || gussuriTableBody) { // いずれかのテーブルボディがあればそこにエラー表示する例
+             const errorMsg = '<tr><td colspan="6" style="color: red; text-align: center;">ポケモンデータの読み込みに失敗しました。<br>pokemon_data.json を確認してページを再読み込みしてください。</td></tr>';
+             if (utoutoTableBody) utoutoTableBody.innerHTML = errorMsg;
+             if (suyasuyaTableBody) suyasuyaTableBody.innerHTML = errorMsg;
+             if (gussuriTableBody) gussuriTableBody.innerHTML = errorMsg;
         }
         console.error("マスターデータのロードに失敗したため、アプリケーションの初期化を中断します。");
         return;
@@ -613,10 +713,7 @@ async function initializeApp() {
 
     pokemonSleepData = buildInitialSleepData(masterData);
     loadProgress();
-    renderPokemonList();
-    renderDittoTable(); // メタモンテーブルも描画
-    updateAllFieldsProgress();
-    updateOverallProgress();
+    renderAllUI(); // UI描画をヘルパー関数で実行
 
     const currentYearSpan = document.getElementById('current-year');
     if (currentYearSpan) {
